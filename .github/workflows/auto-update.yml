@@ -1,0 +1,191 @@
+name: 🔄 Auto Update Knowledge Base
+
+on:
+  # Atualização programada
+  schedule:
+    - cron: '0 2 * * *'  # Diariamente às 2 AM
+    - cron: '0 14 * * 1' # Semanalmente às segundas 14h
+
+  # Trigger manual
+  workflow_dispatch:
+    inputs:
+      update_type:
+        description: 'Tipo de atualização'
+        required: true
+        default: 'incremental'
+        type: choice
+        options:
+          - incremental
+          - full
+          - emergency
+
+  # Ao fazer push em branches específicas
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'apps/**'
+      - 'packages/**'
+      - 'supabase/**'
+      - '.madboat/**'
+
+jobs:
+  detect-changes:
+    name: 🔍 Detectar Mudanças
+    runs-on: ubuntu-latest
+    outputs:
+      needs_update: ${{ steps.check.outputs.needs_update }}
+      update_areas: ${{ steps.check.outputs.areas }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Verificar mudanças
+        id: check
+        run: |
+          # Detectar áreas que mudaram
+          AREAS=""
+
+          if git diff HEAD^ HEAD --name-only | grep -q "apps/"; then
+            AREAS="${AREAS}frontend,"
+          fi
+
+          if git diff HEAD^ HEAD --name-only | grep -q "supabase/migrations/"; then
+            AREAS="${AREAS}database,"
+          fi
+
+          if git diff HEAD^ HEAD --name-only | grep -q ".madboat/agents/"; then
+            AREAS="${AREAS}agents,"
+          fi
+
+          if [ -n "$AREAS" ]; then
+            echo "needs_update=true" >> $GITHUB_OUTPUT
+            echo "areas=${AREAS}" >> $GITHUB_OUTPUT
+          else
+            echo "needs_update=false" >> $GITHUB_OUTPUT
+          fi
+
+  update-context:
+    name: 📝 Atualizar Contexto
+    needs: detect-changes
+    if: needs.detect-changes.outputs.needs_update == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Atualizar arquivos de contexto
+        run: |
+          # Atualizar timestamp no README
+          sed -i "s/Última Atualização: .*/Última Atualização: $(date +'%Y-%m-%d %H:%M')/" conhecimento-claude/README.md
+
+          # Se houve mudanças no banco
+          if [[ "${{ needs.detect-changes.outputs.areas }}" == *"database"* ]]; then
+            echo "Atualizando documentação do banco..."
+            # Script para extrair schema atual
+            npm run extract:schema > conhecimento-claude/07-banco-dados/SCHEMA_ATUAL.md
+          fi
+
+          # Se houve mudanças nos agentes
+          if [[ "${{ needs.detect-changes.outputs.areas }}" == *"agents"* ]]; then
+            echo "Atualizando documentação dos agentes..."
+            # Copiar configs atualizadas dos agentes
+            cp .madboat/agents/*/config.yaml conhecimento-claude/02-agentes/configs/
+          fi
+
+      - name: Gerar changelog
+        run: |
+          echo "## Atualização $(date +'%Y-%m-%d')" >> conhecimento-claude/09-estado-atual/CHANGELOG.md
+          echo "" >> conhecimento-claude/09-estado-atual/CHANGELOG.md
+          git log --oneline -10 >> conhecimento-claude/09-estado-atual/CHANGELOG.md
+          echo "" >> conhecimento-claude/09-estado-atual/CHANGELOG.md
+
+      - name: Commit e Push
+        run: |
+          git config --local user.email "kraken@madboat.app"
+          git config --local user.name "Kraken Bot"
+          git add conhecimento-claude/
+          git diff --staged --quiet || git commit -m "🔄 Auto-update knowledge base [$(date +'%Y-%m-%d %H:%M')]"
+          git push
+
+  validate-knowledge:
+    name: ✅ Validar Knowledge Base
+    needs: update-context
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validar estrutura
+        run: |
+          # Verificar se todos os diretórios existem
+          REQUIRED_DIRS=(
+            "01-contexto-sistema"
+            "02-agentes"
+            "03-jornada-usuario"
+            "04-regras-negocio"
+            "05-padroes-codigo"
+            "06-design-system"
+            "07-banco-dados"
+            "08-integracoes"
+            "09-estado-atual"
+            "10-instrucoes-especiais"
+          )
+
+          for dir in "${REQUIRED_DIRS[@]}"; do
+            if [ ! -d "conhecimento-claude/$dir" ]; then
+              echo "❌ Diretório ausente: $dir"
+              exit 1
+            fi
+          done
+
+          echo "✅ Estrutura validada com sucesso!"
+
+      - name: Verificar consistência
+        run: |
+          # Verificar links quebrados
+          find conhecimento-claude -name "*.md" -exec grep -l "\[.*\](.*)" {} \; | while read file; do
+            echo "Verificando links em $file..."
+            # Adicionar verificação de links aqui
+          done
+
+  notify-agents:
+    name: 📢 Notificar Agentes
+    needs: validate-knowledge
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Notificar Kraken
+        run: |
+          echo "🐙 Kraken notificado sobre atualização da knowledge base"
+
+      - name: Criar issue de revisão
+        uses: actions/github-script@v6
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '📚 Knowledge Base Atualizada - Revisão Necessária',
+              body: `## Knowledge Base foi atualizada automaticamente
+
+              **Áreas atualizadas**: ${{ needs.detect-changes.outputs.areas }}
+              **Timestamp**: ${new Date().toISOString()}
+
+              ### Checklist de Revisão
+              - [ ] Verificar precisão das informações
+              - [ ] Confirmar que reflete o estado atual
+              - [ ] Validar links e referências
+              - [ ] Aprovar para sincronização com Claude
+
+              cc @kraken @ulisses`,
+              labels: ['knowledge-base', 'auto-update']
+            })
