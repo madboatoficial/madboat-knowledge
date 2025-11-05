@@ -1,0 +1,122 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    overflow-x: hidden;
+    background: #000;
+}
+
+#container {
+    position: relative;
+    width: 100%;
+    height: 300vh; /* 3x a altura da viewport para permitir scroll */
+}
+
+#canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    z-index: 1;
+}
+
+.scene-text {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    text-align: center;
+    pointer-events: none;
+}
+
+.scene-text h1 {
+    font-size: 8rem;
+    font-weight: 900;
+    letter-spacing: 1.5rem;
+    text-transform: uppercase;
+    text-shadow: 0 0 30px currentColor;
+    opacity: 0;
+}
+
+.nebula-text {
+    color: #b040ff;
+    text-shadow:
+        0 0 10px #b040ff,
+        0 0 20px #b040ff,
+        0 0 40px #b040ff,
+        0 0 80px #b040ff,
+        0 0 120px #b040ff;
+}
+
+.odyssey-text {
+    color: #ff3030;
+    text-shadow:
+        0 0 10px #ff3030,
+        0 0 20px #ff3030,
+        0 0 40px #ff3030,
+        0 0 80px #ff3030,
+        0 0 120px #ff3030;
+}
+
+#scroll-indicator {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    text-align: center;
+    color: #fff;
+    opacity: 0.7;
+    animation: bounce 2s infinite;
+}
+
+#scroll-indicator p {
+    margin-top: 10px;
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.scroll-arrow {
+    font-size: 2rem;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateX(-50%) translateY(0);
+    }
+    50% {
+        transform: translateX(-50%) translateY(-10px);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.3;
+    }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .scene-text h1 {
+        font-size: 4rem;
+        letter-spacing: 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .scene-text h1 {
+        font-size: 2.5rem;
+        letter-spacing: 0.3rem;
+    }
+}

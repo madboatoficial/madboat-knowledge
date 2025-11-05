@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nebula Odyssey - SPA</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="container">
+        <canvas id="canvas"></canvas>
+
+        <!-- Texto da primeira cena -->
+        <div id="scene1-text" class="scene-text">
+            <h1 class="nebula-text">NEBULA</h1>
+        </div>
+
+        <!-- Texto da segunda cena -->
+        <div id="scene2-text" class="scene-text">
+            <h1 class="odyssey-text">ODISSEIA</h1>
+        </div>
+
+        <!-- Indicador de scroll -->
+        <div id="scroll-indicator">
+            <div class="scroll-arrow">↓</div>
+            <p>Role ou arraste</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
