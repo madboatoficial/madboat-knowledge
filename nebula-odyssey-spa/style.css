@@ -35,13 +35,48 @@ body {
     pointer-events: none;
 }
 
+.logo-container {
+    margin-bottom: 2rem;
+    opacity: 0;
+}
+
+.star-icon {
+    width: 80px;
+    height: 80px;
+    color: #c880ff;
+    filter: drop-shadow(0 0 15px rgba(184, 64, 255, 0.5));
+    animation: starPulse 3s ease-in-out infinite;
+}
+
+@keyframes starPulse {
+    0%, 100% {
+        transform: scale(1) rotate(0deg);
+        filter: drop-shadow(0 0 15px rgba(184, 64, 255, 0.5));
+    }
+    50% {
+        transform: scale(1.05) rotate(5deg);
+        filter: drop-shadow(0 0 25px rgba(184, 64, 255, 0.7));
+    }
+}
+
 .scene-text h1 {
-    font-size: 9rem;
+    font-size: 5rem;
     font-weight: 700;
-    letter-spacing: 2rem;
+    letter-spacing: 1.5rem;
     text-transform: uppercase;
     opacity: 0;
     font-family: 'Arial', sans-serif;
+    margin: 0;
+}
+
+.subtitle {
+    margin-top: 1rem;
+    font-size: 1.2rem;
+    font-weight: 300;
+    letter-spacing: 0.4rem;
+    text-transform: uppercase;
+    color: rgba(200, 128, 255, 0.8);
+    opacity: 0;
 }
 
 .nebula-text {
@@ -111,8 +146,18 @@ body {
 /* Responsividade */
 @media (max-width: 768px) {
     .scene-text h1 {
-        font-size: 5rem;
+        font-size: 3.5rem;
         letter-spacing: 1rem;
+    }
+
+    .star-icon {
+        width: 60px;
+        height: 60px;
+    }
+
+    .subtitle {
+        font-size: 0.9rem;
+        letter-spacing: 0.3rem;
     }
 
     #scroll-indicator p {
@@ -122,8 +167,22 @@ body {
 
 @media (max-width: 480px) {
     .scene-text h1 {
-        font-size: 3rem;
+        font-size: 2.5rem;
         letter-spacing: 0.5rem;
+    }
+
+    .star-icon {
+        width: 50px;
+        height: 50px;
+    }
+
+    .logo-container {
+        margin-bottom: 1.5rem;
+    }
+
+    .subtitle {
+        font-size: 0.7rem;
+        letter-spacing: 0.2rem;
     }
 
     #scroll-indicator {

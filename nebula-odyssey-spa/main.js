@@ -187,44 +187,66 @@ function createNebulaScene() {
 }
 
 // ===========================================
-// Cena 2: ODYSSEY (Shader customizado)
+// Cena 2: ODYSSEY (Flâmulas/Ribbons)
 // ===========================================
 function createOdysseyScene() {
-    const particlesCount = 2500; // Reduzido e ajustado
+    const ribbonCount = 80; // Número de flâmulas
+    const particlesCount = ribbonCount * 30; // 30 pontos por flâmula
     const positions = new Float32Array(particlesCount * 3);
     const colors = new Float32Array(particlesCount * 3);
     const sizes = new Float32Array(particlesCount);
     const random = new Float32Array(particlesCount);
+    const ribbonIndex = new Float32Array(particlesCount);
 
-    for (let i = 0; i < particlesCount; i++) {
-        const i3 = i * 3;
+    for (let i = 0; i < ribbonCount; i++) {
+        // Posição base de cada flâmula
+        const baseX = (Math.random() - 0.5) * 40;
+        const baseY = (Math.random() - 0.5) * 30;
+        const baseZ = (Math.random() - 0.5) * 40;
 
-        // Posições mais dispersas (tema aventura)
-        positions[i3] = (Math.random() - 0.5) * 35;
-        positions[i3 + 1] = (Math.random() - 0.5) * 25;
-        positions[i3 + 2] = (Math.random() - 0.5) * 35;
-
-        // Cores mais sutis - vermelho, laranja e dourado
+        // Cor de cada flâmula
         const colorChoice = Math.random();
+        let r, g, b;
         if (colorChoice < 0.4) {
             // Vermelho suave
-            colors[i3] = 0.8 + Math.random() * 0.2;      // R
-            colors[i3 + 1] = 0.2 + Math.random() * 0.15; // G
-            colors[i3 + 2] = 0.15 + Math.random() * 0.1; // B
+            r = 0.85 + Math.random() * 0.15;
+            g = 0.2 + Math.random() * 0.15;
+            b = 0.15 + Math.random() * 0.1;
         } else if (colorChoice < 0.7) {
             // Laranja suave
-            colors[i3] = 0.9 + Math.random() * 0.1;      // R
-            colors[i3 + 1] = 0.45 + Math.random() * 0.2; // G
-            colors[i3 + 2] = 0.1 + Math.random() * 0.1;  // B
+            r = 0.9 + Math.random() * 0.1;
+            g = 0.5 + Math.random() * 0.2;
+            b = 0.1 + Math.random() * 0.1;
         } else {
             // Dourado suave
-            colors[i3] = 0.85 + Math.random() * 0.15;    // R
-            colors[i3 + 1] = 0.7 + Math.random() * 0.15; // G
-            colors[i3 + 2] = 0.2 + Math.random() * 0.2;  // B
+            r = 0.9 + Math.random() * 0.1;
+            g = 0.75 + Math.random() * 0.15;
+            b = 0.25 + Math.random() * 0.2;
         }
 
-        sizes[i] = Math.random() * 2.5 + 0.8;
-        random[i] = Math.random();
+        const ribbonRandom = Math.random();
+
+        // Criar pontos ao longo da flâmula
+        for (let j = 0; j < 30; j++) {
+            const index = i * 30 + j;
+            const i3 = index * 3;
+
+            // Distribuir pontos ao longo do comprimento da flâmula
+            const t = j / 29; // 0 a 1
+
+            positions[i3] = baseX + (Math.random() - 0.5) * 0.3;
+            positions[i3 + 1] = baseY + t * 3; // Alongar verticalmente
+            positions[i3 + 2] = baseZ + (Math.random() - 0.5) * 0.3;
+
+            colors[i3] = r;
+            colors[i3 + 1] = g;
+            colors[i3 + 2] = b;
+
+            // Tamanho varia ao longo da flâmula (mais largo no topo)
+            sizes[index] = (1.0 - t * 0.5) * 3 + Math.random() * 0.5;
+            random[index] = ribbonRandom + t * 0.3;
+            ribbonIndex[index] = i;
+        }
     }
 
     const geometry = new THREE.BufferGeometry();
@@ -232,8 +254,9 @@ function createOdysseyScene() {
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     geometry.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
     geometry.setAttribute('aRandom', new THREE.BufferAttribute(random, 1));
+    geometry.setAttribute('aRibbonIndex', new THREE.BufferAttribute(ribbonIndex, 1));
 
-    // Shader customizado para Odyssey
+    // Shader para flâmulas ondulantes
     const material = new THREE.ShaderMaterial({
         uniforms: {
             uTime: { value: 0 },
@@ -243,6 +266,7 @@ function createOdysseyScene() {
         vertexShader: `
             attribute float aSize;
             attribute float aRandom;
+            attribute float aRibbonIndex;
             attribute vec3 color;
 
             uniform float uTime;
@@ -255,22 +279,38 @@ function createOdysseyScene() {
             void main() {
                 vec4 modelPosition = modelMatrix * vec4(position, 1.0);
 
-                // Movimento mais dinâmico (tema aventura)
-                modelPosition.x += sin(uTime * 0.8 + aRandom * 8.0) * 0.4;
-                modelPosition.y += cos(uTime * 0.6 + aRandom * 6.0) * 0.35;
-                modelPosition.z += sin(uTime * 0.4 + aRandom * 4.0) * 0.25;
+                // Movimento de tecido ondulante
+                float wave1 = sin(uTime * 1.2 + aRandom * 10.0 + position.y * 0.5) * 0.8;
+                float wave2 = cos(uTime * 0.8 + aRandom * 8.0 + position.y * 0.3) * 0.6;
+                float wave3 = sin(uTime * 1.5 + aRandom * 6.0) * 0.4;
+
+                // Aplicar ondulação em X e Z (como tecido ao vento)
+                modelPosition.x += wave1 + wave3;
+                modelPosition.z += wave2 + wave3 * 0.5;
+
+                // Movimento suave para cima (flâmulas subindo)
+                modelPosition.y += sin(uTime * 0.3 + aRibbonIndex * 0.5) * 0.5;
+
+                // Rotação suave
+                float rotation = uTime * 0.5 + aRibbonIndex * 0.2;
+                float cosR = cos(rotation * 0.1);
+                float sinR = sin(rotation * 0.1);
+                float newX = modelPosition.x * cosR - modelPosition.z * sinR;
+                float newZ = modelPosition.x * sinR + modelPosition.z * cosR;
+                modelPosition.x = newX;
+                modelPosition.z = newZ;
 
                 vec4 viewPosition = viewMatrix * modelPosition;
                 vec4 projectedPosition = projectionMatrix * viewPosition;
 
                 gl_Position = projectedPosition;
 
-                // Tamanho com fade pela distância
+                // Tamanho com perspectiva
                 float sizeAttenuation = 1.0 / -viewPosition.z;
-                gl_PointSize = aSize * uPixelRatio * 18.0 * sizeAttenuation;
+                gl_PointSize = aSize * uPixelRatio * 20.0 * sizeAttenuation;
 
-                // Variação de alpha
-                vAlpha = (0.25 + aRandom * 0.5) * uOpacity;
+                // Alpha varia ao longo da flâmula
+                vAlpha = (0.3 + aRandom * 0.5) * uOpacity;
                 vColor = color;
             }
         `,
@@ -279,16 +319,20 @@ function createOdysseyScene() {
             varying float vAlpha;
 
             void main() {
-                // Partícula circular com brilho central
-                vec2 center = gl_PointCoord - vec2(0.5);
-                float dist = length(center);
+                // Forma alongada de flâmula
+                vec2 coord = gl_PointCoord - vec2(0.5);
 
-                // Gradiente com core mais brilhante
+                // Distância elíptica (mais alongado horizontalmente)
+                float distX = coord.x * 2.0;
+                float distY = coord.y;
+                float dist = length(vec2(distX, distY));
+
+                // Gradiente suave
                 float alpha = smoothstep(0.5, 0.1, dist) * vAlpha;
 
-                // Adiciona brilho no centro
-                float glow = smoothstep(0.3, 0.0, dist);
-                vec3 finalColor = vColor * (1.0 + glow * 0.5);
+                // Brilho suave no centro
+                float glow = smoothstep(0.4, 0.0, dist);
+                vec3 finalColor = vColor * (1.0 + glow * 0.3);
 
                 gl_FragColor = vec4(finalColor, alpha);
             }
@@ -308,22 +352,39 @@ function createOdysseyScene() {
 function setupGSAPAnimations() {
     const scene1Text = document.querySelector('#scene1-text h1');
     const scene2Text = document.querySelector('#scene2-text h1');
+    const logoContainer = document.querySelector('.logo-container');
+    const subtitle = document.querySelector('.subtitle');
     const scrollIndicator = document.getElementById('scroll-indicator');
 
-    // Animar entrada do texto NEBULA
-    gsap.to(scene1Text, {
-        opacity: 1,
-        duration: 2,
-        ease: 'power2.out',
-        delay: 0.5
-    });
+    // Timeline para entrada da cena 1
+    const introTimeline = gsap.timeline({ delay: 0.3 });
 
-    // ScrollTrigger para transição entre cenas
+    introTimeline
+        .to(logoContainer, {
+            opacity: 1,
+            y: 0,
+            duration: 1.5,
+            ease: 'power3.out'
+        })
+        .to(scene1Text, {
+            opacity: 1,
+            y: 0,
+            duration: 1.5,
+            ease: 'power3.out'
+        }, '-=1')
+        .to(subtitle, {
+            opacity: 1,
+            y: 0,
+            duration: 1.2,
+            ease: 'power2.out'
+        }, '-=0.8');
+
+    // ScrollTrigger para transição entre cenas com morph
     ScrollTrigger.create({
         trigger: '#container',
         start: 'top top',
         end: 'bottom bottom',
-        scrub: 1,
+        scrub: 1.5, // Scrub mais suave para morph
         onUpdate: (self) => {
             scrollProgress = self.progress;
             updateSceneTransition(scrollProgress);
@@ -343,12 +404,12 @@ function setupGSAPAnimations() {
 }
 
 // ===========================================
-// Atualizar transição entre cenas
+// Atualizar transição entre cenas (com morph)
 // ===========================================
 function updateSceneTransition(progress) {
-    // Transição mais suave entre 0.25 e 0.75
-    const transitionStart = 0.25;
-    const transitionEnd = 0.75;
+    // Transição mais suave entre 0.2 e 0.8
+    const transitionStart = 0.2;
+    const transitionEnd = 0.8;
 
     let transitionProgress = 0;
 
@@ -360,34 +421,54 @@ function updateSceneTransition(progress) {
         transitionProgress = (progress - transitionStart) / (transitionEnd - transitionStart);
     }
 
-    // Easing suave para transição
+    // Easing suave com curva personalizada para morph
     const easedProgress = transitionProgress < 0.5
-        ? 2 * transitionProgress * transitionProgress
-        : 1 - Math.pow(-2 * transitionProgress + 2, 2) / 2;
+        ? 4 * transitionProgress * transitionProgress * transitionProgress
+        : 1 - Math.pow(-2 * transitionProgress + 2, 3) / 2;
 
-    // Atualizar opacidade das partículas via uniforms
+    // Atualizar opacidade das partículas via uniforms (morph suave)
     nebulaParticles.material.uniforms.uOpacity.value = 1 - easedProgress;
     odysseyParticles.material.uniforms.uOpacity.value = easedProgress;
 
-    // Rotação mais sutil
-    nebulaParticles.rotation.y = progress * Math.PI * 0.5;
-    odysseyParticles.rotation.y = -progress * Math.PI * 0.3;
+    // Rotação com morph
+    nebulaParticles.rotation.y = progress * Math.PI * 0.3;
+    nebulaParticles.rotation.x = progress * Math.PI * 0.1;
 
-    // Movimento de câmera mais sutil
-    camera.position.z = 5 + progress * 3;
-    camera.rotation.z = progress * 0.05;
+    odysseyParticles.rotation.y = -progress * Math.PI * 0.2;
+    odysseyParticles.rotation.z = progress * Math.PI * 0.15;
 
-    // Atualizar textos com fade mais suave
+    // Movimento de câmera com zoom suave
+    camera.position.z = 5 + easedProgress * 4;
+    camera.position.y = (easedProgress - 0.5) * 2;
+    camera.rotation.z = easedProgress * 0.03;
+
+    // Atualizar elementos da UI
     const scene1Text = document.querySelector('#scene1-text h1');
     const scene2Text = document.querySelector('#scene2-text h1');
+    const logoContainer = document.querySelector('.logo-container');
+    const subtitle = document.querySelector('.subtitle');
 
-    if (easedProgress < 0.4) {
+    // Fade dos elementos da cena 1
+    if (easedProgress < 0.3) {
+        logoContainer.style.opacity = 1 - (easedProgress * 3.33);
         scene1Text.style.opacity = 1 - (easedProgress * 2.5);
+        subtitle.style.opacity = 1 - (easedProgress * 3);
         scene2Text.style.opacity = 0;
     } else {
+        logoContainer.style.opacity = 0;
         scene1Text.style.opacity = 0;
-        scene2Text.style.opacity = (easedProgress - 0.4) * 1.66;
+        subtitle.style.opacity = 0;
+        scene2Text.style.opacity = (easedProgress - 0.3) * 1.43;
     }
+
+    // Escala dos elementos durante transição (efeito morph)
+    const scaleNebula = 1 - easedProgress * 0.2;
+    const scaleOdyssey = 0.8 + easedProgress * 0.2;
+
+    logoContainer.style.transform = `scale(${scaleNebula})`;
+    scene1Text.style.transform = `scale(${scaleNebula})`;
+    subtitle.style.transform = `scale(${scaleNebula})`;
+    scene2Text.style.transform = `scale(${scaleOdyssey})`;
 }
 
 // ===========================================
@@ -468,14 +549,15 @@ function animate() {
 
     // Atualizar tempo nos shaders
     if (nebulaParticles) {
-        nebulaParticles.material.uniforms.uTime.value = elapsedTime * 0.5; // Velocidade reduzida
-        nebulaParticles.rotation.y += 0.0001; // Rotação mais sutil
+        nebulaParticles.material.uniforms.uTime.value = elapsedTime * 0.4;
+        nebulaParticles.rotation.y += 0.00008;
     }
 
     if (odysseyParticles) {
-        odysseyParticles.material.uniforms.uTime.value = elapsedTime * 0.6;
-        odysseyParticles.rotation.x += 0.00005;
-        odysseyParticles.rotation.y -= 0.0002;
+        // Flâmulas com movimento mais rápido e fluido
+        odysseyParticles.material.uniforms.uTime.value = elapsedTime * 0.8;
+        odysseyParticles.rotation.x += 0.0001;
+        odysseyParticles.rotation.y -= 0.00015;
     }
 
     renderer.render(scene, camera);
