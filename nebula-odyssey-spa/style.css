@@ -36,32 +36,28 @@ body {
 }
 
 .scene-text h1 {
-    font-size: 8rem;
-    font-weight: 900;
-    letter-spacing: 1.5rem;
+    font-size: 9rem;
+    font-weight: 700;
+    letter-spacing: 2rem;
     text-transform: uppercase;
-    text-shadow: 0 0 30px currentColor;
     opacity: 0;
+    font-family: 'Arial', sans-serif;
 }
 
 .nebula-text {
-    color: #b040ff;
+    color: #c880ff;
     text-shadow:
-        0 0 10px #b040ff,
-        0 0 20px #b040ff,
-        0 0 40px #b040ff,
-        0 0 80px #b040ff,
-        0 0 120px #b040ff;
+        0 0 15px rgba(184, 64, 255, 0.4),
+        0 0 30px rgba(184, 64, 255, 0.2),
+        0 2px 4px rgba(0, 0, 0, 0.8);
 }
 
 .odyssey-text {
-    color: #ff3030;
+    color: #ff6060;
     text-shadow:
-        0 0 10px #ff3030,
-        0 0 20px #ff3030,
-        0 0 40px #ff3030,
-        0 0 80px #ff3030,
-        0 0 120px #ff3030;
+        0 0 15px rgba(255, 48, 48, 0.4),
+        0 0 30px rgba(255, 48, 48, 0.2),
+        0 2px 4px rgba(0, 0, 0, 0.8);
 }
 
 #scroll-indicator {
@@ -71,20 +67,26 @@ body {
     transform: translateX(-50%);
     z-index: 20;
     text-align: center;
-    color: #fff;
-    opacity: 0.7;
+    color: rgba(255, 255, 255, 0.6);
+    opacity: 0.5;
     animation: bounce 2s infinite;
+    transition: opacity 0.3s ease;
+}
+
+#scroll-indicator:hover {
+    opacity: 0.8;
 }
 
 #scroll-indicator p {
     margin-top: 10px;
-    font-size: 0.9rem;
-    letter-spacing: 2px;
+    font-size: 0.75rem;
+    letter-spacing: 3px;
     text-transform: uppercase;
+    font-weight: 300;
 }
 
 .scroll-arrow {
-    font-size: 2rem;
+    font-size: 1.5rem;
     animation: pulse 1.5s ease-in-out infinite;
 }
 
@@ -109,14 +111,27 @@ body {
 /* Responsividade */
 @media (max-width: 768px) {
     .scene-text h1 {
-        font-size: 4rem;
-        letter-spacing: 0.5rem;
+        font-size: 5rem;
+        letter-spacing: 1rem;
+    }
+
+    #scroll-indicator p {
+        font-size: 0.65rem;
     }
 }
 
 @media (max-width: 480px) {
     .scene-text h1 {
-        font-size: 2.5rem;
-        letter-spacing: 0.3rem;
+        font-size: 3rem;
+        letter-spacing: 0.5rem;
+    }
+
+    #scroll-indicator {
+        bottom: 30px;
+    }
+
+    #scroll-indicator p {
+        font-size: 0.6rem;
+        letter-spacing: 2px;
     }
 }
