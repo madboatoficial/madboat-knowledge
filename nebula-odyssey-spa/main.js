@@ -379,11 +379,12 @@ function setupGSAPAnimations() {
             ease: 'power2.out'
         }, '-=0.8');
 
-    // ScrollTrigger para transição entre cenas com morph
+    // ScrollTrigger para transição entre cenas com morph (HORIZONTAL)
     ScrollTrigger.create({
         trigger: '#container',
-        start: 'top top',
-        end: 'bottom bottom',
+        start: 'left left',
+        end: 'right right',
+        horizontal: true,
         scrub: 1.5, // Scrub mais suave para morph
         onUpdate: (self) => {
             scrollProgress = self.progress;
@@ -395,8 +396,9 @@ function setupGSAPAnimations() {
     gsap.to(scrollIndicator, {
         scrollTrigger: {
             trigger: '#container',
-            start: 'top top',
-            end: '20% top',
+            start: 'left left',
+            end: '20% left',
+            horizontal: true,
             scrub: true
         },
         opacity: 0
@@ -472,16 +474,16 @@ function updateSceneTransition(progress) {
 }
 
 // ===========================================
-// Controles (Mouse Drag)
+// Controles (Mouse Drag Horizontal)
 // ===========================================
 function setupControls() {
-    let mouseY = 0;
-    let targetScrollY = window.scrollY;
+    let mouseX = 0;
+    let targetScrollX = window.scrollX;
 
-    // Mouse move para parallax suave
+    // Mouse move para parallax suave (vertical ainda funciona para profundidade)
     document.addEventListener('mousemove', (e) => {
         if (!isDragging) {
-            mouseY = (e.clientY / window.innerHeight) * 2 - 1;
+            const mouseY = (e.clientY / window.innerHeight) * 2 - 1;
 
             gsap.to(camera.position, {
                 y: mouseY * 0.5,
@@ -491,25 +493,24 @@ function setupControls() {
         }
     });
 
-    // Mouse drag para scroll
+    // Mouse drag para scroll HORIZONTAL
     document.addEventListener('mousedown', (e) => {
         isDragging = true;
-        startY = e.clientY;
+        startY = e.clientX; // Agora captura X
     });
 
     document.addEventListener('mousemove', (e) => {
         if (isDragging) {
-            const deltaY = startY - e.clientY;
-            targetScrollY += deltaY * 2;
-            targetScrollY = Math.max(0, Math.min(targetScrollY, document.body.scrollHeight - window.innerHeight));
+            const deltaX = startY - e.clientX; // Delta horizontal
+            targetScrollX += deltaX * 2;
+            targetScrollX = Math.max(0, Math.min(targetScrollX, document.body.scrollWidth - window.innerWidth));
 
-            gsap.to(window, {
-                scrollTo: targetScrollY,
-                duration: 0.5,
-                ease: 'power2.out'
+            window.scrollTo({
+                left: targetScrollX,
+                behavior: 'auto'
             });
 
-            startY = e.clientY;
+            startY = e.clientX;
         }
     });
 
@@ -517,25 +518,24 @@ function setupControls() {
         isDragging = false;
     });
 
-    // Touch para mobile
-    let touchStartY = 0;
+    // Touch para mobile (HORIZONTAL)
+    let touchStartX = 0;
 
     document.addEventListener('touchstart', (e) => {
-        touchStartY = e.touches[0].clientY;
+        touchStartX = e.touches[0].clientX;
     });
 
     document.addEventListener('touchmove', (e) => {
-        const deltaY = touchStartY - e.touches[0].clientY;
-        targetScrollY += deltaY * 2;
-        targetScrollY = Math.max(0, Math.min(targetScrollY, document.body.scrollHeight - window.innerHeight));
+        const deltaX = touchStartX - e.touches[0].clientX;
+        targetScrollX += deltaX * 2;
+        targetScrollX = Math.max(0, Math.min(targetScrollX, document.body.scrollWidth - window.innerWidth));
 
-        gsap.to(window, {
-            scrollTo: targetScrollY,
-            duration: 0.5,
-            ease: 'power2.out'
+        window.scrollTo({
+            left: targetScrollX,
+            behavior: 'auto'
         });
 
-        touchStartY = e.touches[0].clientY;
+        touchStartX = e.touches[0].clientX;
     });
 }
 

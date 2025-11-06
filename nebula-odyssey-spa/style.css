@@ -6,14 +6,16 @@
 
 body {
     font-family: 'Arial', sans-serif;
-    overflow-x: hidden;
+    overflow-y: hidden;
+    overflow-x: auto;
     background: #000;
 }
 
 #container {
     position: relative;
-    width: 100%;
-    height: 300vh; /* 3x a altura da viewport para permitir scroll */
+    width: 300vw; /* 3x a largura da viewport para scroll horizontal */
+    height: 100vh;
+    display: flex;
 }
 
 #canvas {
@@ -97,15 +99,19 @@ body {
 
 #scroll-indicator {
     position: fixed;
-    bottom: 40px;
-    left: 50%;
-    transform: translateX(-50%);
+    bottom: 50%;
+    right: 40px;
+    transform: translateY(50%);
     z-index: 20;
     text-align: center;
     color: rgba(255, 255, 255, 0.6);
     opacity: 0.5;
-    animation: bounce 2s infinite;
+    animation: bounceHorizontal 2s infinite;
     transition: opacity 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
 }
 
 #scroll-indicator:hover {
@@ -113,11 +119,12 @@ body {
 }
 
 #scroll-indicator p {
-    margin-top: 10px;
     font-size: 0.75rem;
     letter-spacing: 3px;
     text-transform: uppercase;
     font-weight: 300;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
 }
 
 .scroll-arrow {
@@ -125,12 +132,12 @@ body {
     animation: pulse 1.5s ease-in-out infinite;
 }
 
-@keyframes bounce {
+@keyframes bounceHorizontal {
     0%, 100% {
-        transform: translateX(-50%) translateY(0);
+        transform: translateY(50%) translateX(0);
     }
     50% {
-        transform: translateX(-50%) translateY(-10px);
+        transform: translateY(50%) translateX(10px);
     }
 }
 
@@ -141,6 +148,24 @@ body {
     50% {
         opacity: 0.3;
     }
+}
+
+/* Scrollbar customizada */
+body::-webkit-scrollbar {
+    height: 8px;
+}
+
+body::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+body::-webkit-scrollbar-thumb {
+    background: rgba(200, 128, 255, 0.3);
+    border-radius: 4px;
+}
+
+body::-webkit-scrollbar-thumb:hover {
+    background: rgba(200, 128, 255, 0.5);
 }
 
 /* Responsividade */
@@ -158,6 +183,10 @@ body {
     .subtitle {
         font-size: 0.9rem;
         letter-spacing: 0.3rem;
+    }
+
+    #scroll-indicator {
+        right: 20px;
     }
 
     #scroll-indicator p {
@@ -186,7 +215,7 @@ body {
     }
 
     #scroll-indicator {
-        bottom: 30px;
+        right: 15px;
     }
 
     #scroll-indicator p {
